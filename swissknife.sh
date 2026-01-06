@@ -8,11 +8,13 @@ NC='\033[0m'
 
 echo -e "${VERDE}Swiss Army Knife${NC}"
 echo "Selecione o serviço:"
-echo " 1. Scann - Host Discovery (Verificar se está UP)"
-echo " 2. Scann - Portas Abertas (Port Scan detalhado)"
+echo " 1. Scann - Host Discovery"
+echo " 2. Scann - Portas Abertas"
 echo " 3. Parsing Html"
-echo " 4. Exploite (NAO IMPLEMENTADO)"
-echo " 5. Brute Force (NAO IMPLEMENTADO)"
+echo " 4. Tranferencia de zona"
+echo " 5. DoS (NAO IMPLEMENTADO)"
+echo " 6. Exploit (NAO IMPLEMENTADO)"
+echo " 7. Brute Force (NAO IMPLEMENTADO)"
 echo "------------------------------"
 
 read -r -p "Digite a opção desejada: " SELECAO
@@ -20,7 +22,7 @@ read -r -p "Digite a opção desejada: " SELECAO
 if [[ $SELECAO -eq 1 ]]; then
 
     # ----------------------------------------------------
-    # OPÇÃO 1: HOST DISCOVERY (PING SWEEP / HOST UP)
+    # OPÇÃO 1: HOST DISCOVERY
     # ----------------------------------------------------
     echo -e "\n${VERDE}## Opção 1: Host Discovery (Ping Scan)${NC}"
 
@@ -37,10 +39,8 @@ if [[ $SELECAO -eq 1 ]]; then
 
         for i in $(seq 1 254); do
             HOST="$PREFIXO.$i"
-            # -sn para Ping Scan (descobrir hosts ativos sem escanear portas)
             nmap -sn "$HOST" | grep "Nmap scan report for" &
         done
-        wait
         echo -e "\n${VERDE}Varredura de faixa concluída.${NC}"
 
     elif [[ $TIPO_VARREDURA -eq 2 ]]; then
@@ -48,11 +48,10 @@ if [[ $SELECAO -eq 1 ]]; then
 
         echo -e "\n${VERDE}Executando Nmap Ping Scan no host específico: $HOST_ESPECIFICO...${NC}"
 
-        # Filtra a saída para mostrar apenas "Host is up" (com a técnica do awk que você aprendeu)
         RESULTADO=$(nmap -sn "$HOST_ESPECIFICO" 2>/dev/null | grep "Host is up" | awk '{print $1, $2, $3}')
 
         if [[ -z $RESULTADO ]]; then
-            echo -e "${VERMELHO}Host está Down ou não respondeu ao ping.${NC}"
+            echo -e "${VERMELHO}Host down${NC}"
         else
             echo -e "${AZUL}Status do Host: $RESULTADO${NC}"
         fi
@@ -64,7 +63,7 @@ if [[ $SELECAO -eq 1 ]]; then
 elif [[ $SELECAO -eq 2 ]]; then
 
     # ----------------------------------------------------
-    # NOVA OPÇÃO 2: PORT SCAN DETALHADO
+    # NOVA OPÇÃO 2: PORT SCAN
     # ----------------------------------------------------
     echo -e "\n${VERDE}## Opção 2: Varredura de Portas Abertas${NC}"
 
@@ -82,7 +81,7 @@ elif [[ $SELECAO -eq 2 ]]; then
 
     elif [[ $TIPO_SCAN_PORTA -eq 2 ]]; then
         echo -e "\n${VERMELHO}AVISO: Este scan é muito lento!${NC}"
-        echo -e "${AZUL}Iniciando Nmap (Todas as Portas) em $HOST_PORT_SCAN...${NC}"
+        echo -e "${AZUL}Iniciando Nmap (todas as portas) em $HOST_PORT_SCAN...${NC}"
         nmap -sV -p- "$HOST_PORT_SCAN"
 
     else
@@ -99,14 +98,14 @@ elif [[ $SELECAO -eq 3 ]]; then
 	read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
 
 	echo "Selecione o tipo de parsing"
-	echo " 1. Listas todas as hrefs"
-	echo " 2. Listas os endereços relacionados"
+	echo " 1. Listar todas as hrefs"
+	echo " 2. Listar apenas os endereços relacionados"
 
 	read -r -p "Digite 1 ou 2: " PARSING
 
 	echo -e "\n${AZUL}===========================================================================${NC}"
 	echo -e "\n${LARANJA}Explorando $ENDERECO${NC}"
-	echo -e "\n${AZUL}============================================================================${NC}"
+	echo -e "\n${AZUL}===========================================================================${NC}"
 
 	if [[ $PARSING -eq 1 ]]; then
 		printf "${AZUL}%-40s %-30s\n${NC}" "IP" "DOMAIN"
@@ -139,7 +138,7 @@ elif [[ $SELECAO -eq 3 ]]; then
 		urls=$(wget -qO- "$ENDERECO" 2>/dev/null | grep -oE 'https?://[^/"]+' | cut -d "/" -f 3 | tr -d '\r\\'  | sort -u)
 
 		for s in $urls; do
-			dns_info=$(host "$s")
+			dns_info=$(host "$s" 2>/dev/null)
 
 			echo "$dns_info" | grep -E "has address|has IPv6 address" | while read -r line; do
 				if echo "$line" | grep -q "IPv6"; then
@@ -173,15 +172,42 @@ elif [[ $SELECAO -eq 3 ]]; then
 		echo -e "${AZUL}============================================================================${NC}"
 	fi
 
-# ------- NAO IMPLEMENTADO ------------
 
 elif [[ $SELECAO -eq 4 ]]; then
-    echo -e "\n${VERDE}## Opção 3: Exploite (Simulação)${NC}"
-    echo "Funcionalidade de Exploit seria implementada aqui."
 
-elif [[ $SELECAO -eq 5 ]]; then
-    echo -e "\n${VERDE}## Opção 4: Brute Force (Simulação)${NC}"
-    echo "Funcionalidade de Brute Force seria implementada aqui."
+    # ----------------------------------------------------
+    # OPCAO 4: Transferencia de Zona
+    # ----------------------------------------------------
+	echo -e "\n${VERDE}## Opção 4: Zone Transfer${NC}"
+
+	read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
+
+	echo -e "\n${AZUL}====================================================================${NC}"
+        echo -e "\n${LARANJA}Explorando $ENDERECO${NC}"
+        echo -e "\n${AZUL}====================================================================${NC}"
+
+	echo -e "${VERMELHO}Servidores encontrados:${NC}"
+	servers=$(host -t ns $ENDERECO | cut -d " " -f 4);
+	echo "$servers"
+
+	echo -e "${AZUL}====================================================================${NC}"
+
+	for server in $servers;
+	do
+		host -l $ENDERECO $server;
+	done
+
+	echo -e "${AZUL}====================================================================${NC}"
+
+# ------- NAO IMPLEMENTADO ------------
+
+elif [[ $SELECAO -eq 6 ]]; then
+    echo -e "\n${VERDE}## Opção 3: Exploite${NC}"
+    echo "Funcionalidade de Exploit."
+
+elif [[ $SELECAO -eq 7 ]]; then
+    echo -e "\n${VERDE}## Opção 4: Brute Force${NC}"
+    echo "Funcionalidade de Brute Force."
 
 else
     echo -e "\n${VERMELHO}Opção inválida. Por favor, selecione uma opção válida.${NC}"

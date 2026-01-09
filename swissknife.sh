@@ -12,18 +12,19 @@ echo " 1. Scann - Host Discovery"
 echo " 2. Scann - Portas Abertas"
 echo " 3. Parsing Html"
 echo " 4. Tranferencia de zona"
-echo " 5. DoS (NAO IMPLEMENTADO)"
-echo " 6. Exploit (NAO IMPLEMENTADO)"
-echo " 7. Brute Force (NAO IMPLEMENTADO)"
+echo " 5. DNS Enum"
+echo " 6. Sub Takeover"
+echo " 7. DoS (NAO IMPLEMENTADO)"
+echo " 8. Exploit (NAO IMPLEMENTADO)"
+echo " 9. Brute Force (NAO IMPLEMENTADO)"
 echo "------------------------------"
 
 read -r -p "Digite a opção desejada: " SELECAO
 
 if [[ $SELECAO -eq 1 ]]; then
 
-    # ----------------------------------------------------
     # OPÇÃO 1: HOST DISCOVERY
-    # ----------------------------------------------------
+
     echo -e "\n${VERDE}## Opção 1: Host Discovery (Ping Scan)${NC}"
 
     echo "Selecione o tipo de alvo para o scan:"
@@ -62,9 +63,8 @@ if [[ $SELECAO -eq 1 ]]; then
 
 elif [[ $SELECAO -eq 2 ]]; then
 
-    # ----------------------------------------------------
-    # NOVA OPÇÃO 2: PORT SCAN
-    # ----------------------------------------------------
+    # OPÇÃO 2: PORT SCAN
+
     echo -e "\n${VERDE}## Opção 2: Varredura de Portas Abertas${NC}"
 
     read -r -p "Digite o IP do host que deseja escanear as portas: " HOST_PORT_SCAN
@@ -90,9 +90,8 @@ elif [[ $SELECAO -eq 2 ]]; then
 
 elif [[ $SELECAO -eq 3 ]]; then
 
-    # ----------------------------------------------------
-    # OPCAO 3: PARSING
-    # ----------------------------------------------------
+    # OPÇÃO 3: PARSING HTML
+
 	echo -e "\n${VERDE}## Opção 3: Parsing HTML${NC}"
 
 	read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
@@ -172,12 +171,10 @@ elif [[ $SELECAO -eq 3 ]]; then
 		echo -e "${AZUL}============================================================================${NC}"
 	fi
 
-
 elif [[ $SELECAO -eq 4 ]]; then
 
-    # ----------------------------------------------------
-    # OPCAO 4: Transferencia de Zona
-    # ----------------------------------------------------
+    # OPÇÃO 4: Transferencia de Zona
+
 	echo -e "\n${VERDE}## Opção 4: Zone Transfer${NC}"
 
 	read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
@@ -199,14 +196,81 @@ elif [[ $SELECAO -eq 4 ]]; then
 
 	echo -e "${AZUL}====================================================================${NC}"
 
-# ------- NAO IMPLEMENTADO ------------
+elif [[ $SELECAO -eq 5 ]]; then
+
+    # OPÇÃO 5: Dns Enum
+
+	echo -e "\n${VERDE}## Opção 5: Dns Enum${NC}"
+
+	read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
+
+	read -r -p "Endereço da lista: " LISTA
+
+	echo -e "\n${AZUL}==================================================================${NC}"
+	echo -e "\n${LARANJA}Explorando $ENDERECO${NC}"
+	echo -e "\n${AZUL}==================================================================${NC}"
+
+	echo -e "${VERMELHO}Serviços Encontrados: ${NC}"
+
+	while read pref;
+	do
+		host $pref.$ENDERECO | grep -v "NXDOMAIN";
+	done < $LISTA
+	echo -e "\n${AZUL}==================================================================${NC}"
 
 elif [[ $SELECAO -eq 6 ]]; then
-    echo -e "\n${VERDE}## Opção 3: Exploite${NC}"
-    echo "Funcionalidade de Exploit."
+
+    # OPÇÃO 6: Sub Takeover
+
+        echo -e "\n${VERDE}## Opção 6: Sub Takeover${NC}"
+
+	echo "Selecione a opção desejada"
+	echo "1. Lista de Possíveis Subdomínios"
+	echo "2. Lista de Endereços"
+	read -r -p "Digite a opção desejada: " OPCAO
+
+        read -r -p "Digite o endereço alvo (ex. facebook.com): " ENDERECO
+
+        read -r -p "Endereço da lista: " LISTA
+
+        echo -e "\n${AZUL}==================================================================${NC}"
+        echo -e "\n${LARANJA}Procurando possibilidades em $ENDERECO${NC}"
+        echo -e "\n${AZUL}==================================================================${NC}"
+        if [[ $OPCAO -eq 1 ]]; then
+
+		printf "${LARANJA}%-30s -------> %-30s${NC}\n" "ALIAS" "CNAME"
+
+        	while read pref;
+        	do
+               		host -t cname $pref.$ENDERECO | grep "alias" | awk '{printf "%-30s -------> %-30s\n", $1, $6}';        
+		done < $LISTA
+
+        elif [[ $OPCAO -eq 2 ]]; then
+
+		printf "${LARANJA}%-30s -------> %-30s${NC}\n" "ALIAS" "CNAME"
+
+		while read ender;
+                do
+                        host -t cname $ender | grep "alias" | awk '{printf "%-30s -------> %-30s\n", $1, $6}';
+                done < $LISTA
+
+
+	echo -e "\n${AZUL}==================================================================${NC}"
+
+	fi
+
+# ------- NAO IMPLEMENTADO ------------
 
 elif [[ $SELECAO -eq 7 ]]; then
-    echo -e "\n${VERDE}## Opção 4: Brute Force${NC}"
+    echo -e "\n${VERDE}## Opção 7: Exploit${NC}"
+    echo "Funcionalidade de Exploit."
+
+elif [[ $SELECAO -eq 8 ]]; then
+    echo -e "\n${VERDE}## Opção 7: Exploit${NC}"
+    echo "Funcionalidade de Exploit."
+
+elif [[ $SELECAO -eq 9 ]]; then
+    echo -e "\n${VERDE}## Opção 8: Brute Force${NC}"
     echo "Funcionalidade de Brute Force."
 
 else
